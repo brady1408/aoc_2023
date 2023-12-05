@@ -31,7 +31,7 @@ func readInput() string {
 
 func main() {
 	partOne()
-	// partTwo()
+	partTwo()
 }
 
 func partOne() {
@@ -73,6 +73,60 @@ func partOne() {
 	}
 	sum := 0
 	for _, v := range values {
+		sum += v
+	}
+	fmt.Println(sum)
+}
+
+func addCards(cardID, found int, cardCountMap map[int]int) {
+	cards := cardCountMap[cardID]
+	for i := 1; i <= found; i++ {
+		cardCountMap[cardID+i] += cards
+	}
+}
+
+func partTwo() {
+	cardCountMap := make(map[int]int)
+	input := readInput()
+	for k := range strings.Split(input, "\n") {
+		cardCountMap[k+1]++
+	}
+	for i, card := range strings.Split(input, "\n") {
+		cardID := i + 1
+		card = strings.ReplaceAll(card, "  ", " ")
+		card = strings.TrimSpace(card[strings.Index(card, ":")+1:])
+		winningStringNumbers := strings.TrimSpace(card[strings.Index(card, "|")+1:])
+		playingStringNumbers := strings.TrimSpace(card[:strings.Index(card, "|")])
+		winningNumbers := []int{}
+		playingNumbers := []int{}
+		for _, n := range strings.Split(winningStringNumbers, " ") {
+			digit, err := strconv.Atoi(n)
+			if err != nil {
+				log.Fatal(err)
+			}
+			winningNumbers = append(winningNumbers, digit)
+		}
+		for _, n := range strings.Split(playingStringNumbers, " ") {
+			digit, err := strconv.Atoi(n)
+			if err != nil {
+				log.Fatal(err)
+			}
+			playingNumbers = append(playingNumbers, digit)
+		}
+		found := 0
+		for _, n := range playingNumbers {
+			for _, w := range winningNumbers {
+				if n == w {
+					found++
+				}
+			}
+		}
+		if found > 0 {
+			addCards(cardID, found, cardCountMap)
+		}
+	}
+	sum := 0
+	for _, v := range cardCountMap {
 		sum += v
 	}
 	fmt.Println(sum)
