@@ -35,9 +35,9 @@ func main() {
 }
 
 func partOne() {
-	values := []int{}
 	input := readInput()
 	cards := strings.Split(input, "\n")
+	sum := 0
 	for _, card := range cards {
 		card = strings.ReplaceAll(card, "  ", " ")
 		card = strings.TrimSpace(card[strings.Index(card, ":")+1:])
@@ -68,12 +68,8 @@ func partOne() {
 			}
 		}
 		if found > 0 {
-			values = append(values, 1<<(found-1))
+			sum += 1 << (found - 1)
 		}
-	}
-	sum := 0
-	for _, v := range values {
-		sum += v
 	}
 	fmt.Println(sum)
 }
