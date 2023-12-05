@@ -39,6 +39,7 @@ func partOne() {
 	cards := strings.Split(input, "\n")
 	sum := 0
 	for _, card := range cards {
+		// Lets parse this horrible string input
 		card = strings.ReplaceAll(card, "  ", " ")
 		card = strings.TrimSpace(card[strings.Index(card, ":")+1:])
 		winningStringNumbers := strings.TrimSpace(card[strings.Index(card, "|")+1:])
@@ -59,6 +60,8 @@ func partOne() {
 			}
 			playingNumbers = append(playingNumbers, digit)
 		}
+
+		// Now lets do the real work
 		found := 0
 		for _, n := range playingNumbers {
 			for _, w := range winningNumbers {
@@ -82,6 +85,8 @@ func partTwo() {
 	}
 	for i, card := range strings.Split(input, "\n") {
 		cardID := i + 1
+
+		// Lets parse this horrible string input
 		card = strings.ReplaceAll(card, "  ", " ")
 		card = strings.TrimSpace(card[strings.Index(card, ":")+1:])
 		winningStringNumbers := strings.TrimSpace(card[strings.Index(card, "|")+1:])
@@ -102,6 +107,8 @@ func partTwo() {
 			}
 			playingNumbers = append(playingNumbers, digit)
 		}
+
+		// Now lets do the real work
 		found := 0
 		for _, n := range playingNumbers {
 			for _, w := range winningNumbers {
