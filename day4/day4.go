@@ -74,13 +74,6 @@ func partOne() {
 	fmt.Println(sum)
 }
 
-func addCards(cardID, found int, cardCountMap map[int]int) {
-	cards := cardCountMap[cardID]
-	for i := 1; i <= found; i++ {
-		cardCountMap[cardID+i] += cards
-	}
-}
-
 func partTwo() {
 	cardCountMap := make(map[int]int)
 	input := readInput()
@@ -118,7 +111,10 @@ func partTwo() {
 			}
 		}
 		if found > 0 {
-			addCards(cardID, found, cardCountMap)
+			cards := cardCountMap[cardID]
+			for i := 1; i <= found; i++ {
+				cardCountMap[cardID+i] += cards
+			}
 		}
 	}
 	sum := 0
