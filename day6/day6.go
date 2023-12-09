@@ -107,8 +107,10 @@ func partTwo() {
 	r := newRecords()
 	first := 0
 	last := 0
+	calc := 0
 	// find first
 	for j := 0; j < r.singleTime; j++ {
+		calc++
 		if (r.singleTime-j)*j > r.singleDistance {
 			first = j
 			break
@@ -116,6 +118,7 @@ func partTwo() {
 	}
 	// find last
 	for j := r.singleTime; j > 0; j-- {
+		calc++
 		if (r.singleTime-j)*j > r.singleDistance {
 			last = j
 			break
@@ -123,4 +126,5 @@ func partTwo() {
 	}
 	ways := last - first + 1
 	fmt.Println(ways)
+	fmt.Println("calculations made:", calc)
 }

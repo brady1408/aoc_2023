@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 const input1 = `RL
@@ -46,9 +47,13 @@ func readInput() string {
 
 func main() {
 	// Part 1
+	st := time.Now()
 	fmt.Println("Part 1: ", part1(readInput()))
+	fmt.Println("Part 1 Time:", time.Since(st)*time.Nanosecond)
+	st = time.Now()
 	// Part 2
 	fmt.Println("Part 2: ", part2(readInput()))
+	fmt.Println("Part 2 Time:", time.Since(st)*time.Nanosecond)
 }
 
 type puzzle struct {
