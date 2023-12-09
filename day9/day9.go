@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const tempInput = `0 3 6 9 12 15
@@ -23,8 +24,14 @@ func readInput() string {
 }
 
 func main() {
-	fmt.Println(partOne(readInput()))
-	fmt.Println(partTwo(readInput()))
+	// Part 1
+	st := time.Now()
+	fmt.Println("Part 1: ", partOne(readInput()))
+	fmt.Println("Part 1 Time:", time.Since(st))
+	st = time.Now()
+	// Part 2
+	fmt.Println("Part 2: ", partTwo(readInput()))
+	fmt.Println("Part 2 Time:", time.Since(st))
 }
 
 func partOne(input string) int {
