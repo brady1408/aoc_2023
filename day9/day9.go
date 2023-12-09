@@ -27,50 +27,8 @@ func main() {
 	fmt.Println(partTwo(readInput()))
 }
 
-func predictNext(in []int) int {
-	predictMatrix := [][]int{}
-	predictMatrix = append(predictMatrix, in)
-	for i := 0; true; i++ {
-		step := []int{}
-		for k, v := range predictMatrix[i] {
-			if k == 0 {
-				continue
-			}
-			step = append(step, v-predictMatrix[i][k-1])
-		}
-		predictMatrix = append(predictMatrix, step)
-		allZero := true
-		for _, v := range step {
-			if v != 0 {
-				allZero = false
-				break
-			}
-		}
-		if allZero {
-			break
-		}
-	}
-	num := 0
-	for i := len(predictMatrix) - 1; i >= 0; i-- {
-		num += predictMatrix[i][len(predictMatrix[i])-1]
-	}
-	return num
-}
-
 func partOne(input string) int {
-	puzzle := [][]int{}
-	for _, line := range strings.Split(input, "\n") {
-		rowString := strings.Fields(line)
-		row := []int{}
-		for _, numString := range rowString {
-			num, err := strconv.Atoi(numString)
-			if err != nil {
-				log.Fatal(err)
-			}
-			row = append(row, num)
-		}
-		puzzle = append(puzzle, row)
-	}
+	puzzle := parsePuzzle(input)
 	sum := 0
 	for _, v := range puzzle {
 		sum += predictNext(v)
@@ -78,7 +36,34 @@ func partOne(input string) int {
 	return sum
 }
 
+func partTwo(input string) int {
+	puzzle := parsePuzzle(input)
+	sum := 0
+	for _, v := range puzzle {
+		sum += predictPrevious(v)
+	}
+	return sum
+}
+
+func predictNext(in []int) int {
+	predictMatrix := createPredictMatrix(in)
+	num := 0
+	for i := len(predictMatrix) - 1; i >= 0; i-- {
+		num += predictMatrix[i][len(predictMatrix[i])-1]
+	}
+	return num
+}
+
 func predictPrevious(in []int) int {
+	predictMatrix := createPredictMatrix(in)
+	num := 0
+	for i := len(predictMatrix) - 1; i >= 0; i-- {
+		num = (num * -1) + predictMatrix[i][0]
+	}
+	return num
+}
+
+func createPredictMatrix(in []int) [][]int {
 	predictMatrix := [][]int{}
 	predictMatrix = append(predictMatrix, in)
 	for i := 0; true; i++ {
@@ -101,17 +86,13 @@ func predictPrevious(in []int) int {
 			break
 		}
 	}
-	num := 0
-	for i := len(predictMatrix) - 1; i >= 0; i-- {
-		num = (num * -1) + predictMatrix[i][0]
-	}
-	return num
+	return predictMatrix
 }
 
-func partTwo(input string) int {
-	puzzle := [][]int{}
-	for _, line := range strings.Split(input, "\n") {
-		rowString := strings.Fields(line)
+func parsePuzzle(in string) [][]int {
+	p := [][]int{}
+	for _, s := range strings.Split(in, "\n") {
+		rowString := strings.Fields(s)
 		row := []int{}
 		for _, numString := range rowString {
 			num, err := strconv.Atoi(numString)
@@ -120,11 +101,7 @@ func partTwo(input string) int {
 			}
 			row = append(row, num)
 		}
-		puzzle = append(puzzle, row)
+		p = append(p, row)
 	}
-	sum := 0
-	for _, v := range puzzle {
-		sum += predictPrevious(v)
-	}
-	return sum
+	return p
 }
