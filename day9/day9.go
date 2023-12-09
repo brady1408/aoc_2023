@@ -103,11 +103,7 @@ func predictPrevious(in []int) int {
 	}
 	num := 0
 	for i := len(predictMatrix) - 1; i >= 0; i-- {
-		if i < 0 {
-			num -= predictMatrix[i][0]
-		} else {
-			num = (num * -1) + predictMatrix[i][0]
-		}
+		num = (num * -1) + predictMatrix[i][0]
 	}
 	return num
 }
