@@ -22,6 +22,38 @@ SJLL7
 |F--J
 LJ.LJ`
 
+const tempInput3 = `...........
+.S-------7.
+.|F-----7|.
+.||.....||.
+.||.....||.
+.|L-7.F-J|.
+.|..|.|..|.
+.L--J.L--J.
+...........`
+
+const tempInput4 = `.F----7F7F7F7F-7....
+.|F--7||||||||FJ....
+.||.FJ||||||||L7....
+FJL7L7LJLJ||LJ.L-7..
+L--J.L7...LJS7F-7L7.
+....F-J..F7FJ|L7L7L7
+....L7.F7||L7|.L7L7|
+.....|FJLJ|FJ|F7|.LJ
+....FJL-7.||.||||...
+....L---J.LJ.LJLJ...`
+
+const tempInput5 = `FF7FSF7F7F7F7F7F---7
+L|LJ||||||||||||F--J
+FL-7LJLJ||||||LJL-77
+F--JF--7||LJLJ7F7FJ-
+L---JF-JLJ.||-FJLJJ7
+|F|F-JF---7F7-L7L|7|
+|FFJF7L7F-JF7|JL---7
+7-L-JL7||F7|L7F-7F7|
+L.L7LFJ|||||FJL7||LJ
+L7JLJL-JLJLJL--JLJ.L`
+
 const filename = "input.txt"
 
 func readInput() string {
@@ -44,7 +76,7 @@ const (
 	NEBend = "L"
 	NWBend = "J"
 	SWBend = "7"
-	SEBemd = "F"
+	SEBend = "F"
 	ground = "."
 	start  = "S"
 
@@ -64,6 +96,7 @@ type island struct {
 	visited            []string
 	movement           movementMap
 	grid               groundGrid
+	perimeter          map[int]map[int]bool
 }
 
 func (i *island) reset() {
@@ -101,6 +134,93 @@ func (i *island) move(d string) error {
 	}
 }
 
+func (i *island) mapParimeter() {
+	i.perimeter = make(map[int]map[int]bool)
+	d := []string{south, east, north, west}
+	success := false
+	for _, v := range d {
+		startDir := v
+		endDir := ""
+		i.currentDir = v
+		startMap := map[string][]int{north: {0, -1}, south: {0, 1}, east: {1, 0}, west: {-1, 0}}
+		if i.currentX == i.startX && i.currentY == i.startY {
+			if i.perimeter[i.currentY] == nil {
+				i.perimeter[i.currentY] = make(map[int]bool)
+			}
+			i.perimeter[i.currentY][i.currentX] = true
+			i.currentX += startMap[i.currentDir][0]
+			i.currentY += startMap[i.currentDir][1]
+		}
+		for {
+			if i.grid[i.currentY][i.currentX] == ground {
+				i.reset()
+				break
+			}
+			if m, ok := i.movement[i.grid[i.currentY][i.currentX]][i.currentDir]; ok {
+				if i.perimeter[i.currentY] == nil {
+					i.perimeter[i.currentY] = make(map[int]bool)
+				}
+				i.perimeter[i.currentY][i.currentX] = true
+				i.currentX += m.x
+				i.currentY += m.y
+				i.currentDir = m.exitDir
+			} else {
+				i.reset()
+				break
+			}
+			if i.currentX == i.startX && i.currentY == i.startY {
+				endDir = i.currentDir
+				success = true
+				break
+			}
+		}
+		if success {
+			i.grid[i.startY][i.startX] = findStart(startDir, endDir)
+			break
+		}
+	}
+}
+
+func findStart(s, e string) string {
+	if s == north && e == south {
+		return NSPipe
+	}
+	if s == south && e == north {
+		return NSPipe
+	}
+	if s == east && e == west {
+		return EWPipe
+	}
+	if s == west && e == east {
+		return EWPipe
+	}
+	if s == north && e == east {
+		return NWBend
+	}
+	if s == east && e == north {
+		return SEBend
+	}
+	if s == north && e == west {
+		return NEBend
+	}
+	if s == west && e == north {
+		return SWBend
+	}
+	if s == south && e == west {
+		return SEBend
+	}
+	if s == west && e == south {
+		return NWBend
+	}
+	if s == south && e == east {
+		return SWBend
+	}
+	if s == east && e == south {
+		return NEBend
+	}
+	return ""
+}
+
 // x and y start at the upper left corner
 func makeMap() movementMap {
 	m := make(map[string]map[string]movement)
@@ -119,9 +239,9 @@ func makeMap() movementMap {
 	m[SWBend] = make(map[string]movement)
 	m[SWBend][north] = movement{-1, 0, west}
 	m[SWBend][east] = movement{0, 1, south}
-	m[SEBemd] = make(map[string]movement)
-	m[SEBemd][north] = movement{1, 0, east}
-	m[SEBemd][west] = movement{0, 1, south}
+	m[SEBend] = make(map[string]movement)
+	m[SEBend][north] = movement{1, 0, east}
+	m[SEBend][west] = movement{0, 1, south}
 
 	return m
 }
@@ -171,8 +291,8 @@ func main() {
 	fmt.Println("Part 1 Time:", time.Since(st))
 	st = time.Now()
 	// Part 2
-	// fmt.Println("Part 2: ", partTwo(readInput()))
-	// fmt.Println("Part 2 Time:", time.Since(st))
+	fmt.Println("Part 2: ", partTwo(readInput()))
+	fmt.Println("Part 2 Time:", time.Since(st))
 }
 
 func partOne(input string) int {
@@ -185,6 +305,61 @@ func partOne(input string) int {
 		}
 		fmt.Println(v, ": ", err)
 	}
-	fmt.Println(island.visited, len(island.visited))
 	return int(math.Ceil(float64(len(island.visited)) / float64(2)))
+}
+
+func partTwo(input string) int {
+	island := initIsland(input)
+	island.mapParimeter()
+	inside := 0
+	//vector := east
+	for k := range island.grid {
+		for j := range island.grid[k] {
+			if !island.perimeter[k][j] {
+				var countA float64
+				for i := j; i >= 0; i-- {
+					if island.perimeter[k][i] {
+						if island.grid[k][i] == SWBend {
+							for l := i; l >= 0; l-- {
+								if island.perimeter[k][l] {
+									if island.grid[k][l] == NEBend {
+										countA++
+										i = l
+										break
+									}
+									if island.perimeter[k][l] && island.grid[k][l] == SEBend {
+										i = l
+										break
+									}
+								}
+							}
+						}
+						if island.grid[k][i] == NWBend {
+							for l := i; l >= 0; l-- {
+								if island.perimeter[k][l] {
+									if island.grid[k][l] == SEBend {
+										countA++
+										i = l
+										break
+									}
+									if island.perimeter[k][l] && island.grid[k][l] == NEBend {
+										i = l
+										break
+									}
+								}
+							}
+						}
+						if island.grid[k][i] == NSPipe {
+							countA++
+						}
+					}
+				}
+				if int(math.Floor(countA))%2 != 0 {
+					inside++
+				}
+			}
+		}
+
+	}
+	return inside
 }
