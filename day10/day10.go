@@ -7,7 +7,6 @@ import (
 	"math"
 	"os"
 	"strings"
-	"time"
 )
 
 const tempInput = `.....
@@ -21,6 +20,16 @@ const tempInput2 = `7-F7-
 SJLL7
 |F--J
 LJ.LJ`
+
+const tempInput3 = `...........
+.S-------7.
+.|F-----7|.
+.||.....||.
+.||.....||.
+.|L-7.F-J|.
+.|..|.|..|.
+.L--J.L--J.
+...........`
 
 const filename = "input.txt"
 
@@ -57,6 +66,12 @@ const (
 
 type movementMap map[string]map[string]movement
 
+type next struct {
+	x, y      int
+	direction string
+	pipe      string
+}
+
 type island struct {
 	startX, startY     int
 	currentX, currentY int
@@ -64,6 +79,7 @@ type island struct {
 	visited            []string
 	movement           movementMap
 	grid               groundGrid
+	parimeter          map[int]map[int]*next
 }
 
 func (i *island) reset() {
@@ -97,6 +113,57 @@ func (i *island) move(d string) error {
 		}
 		if i.currentX == i.startX && i.currentY == i.startY {
 			return nil
+		}
+	}
+}
+
+func (i *island) mapParimeter() {
+	i.parimeter = make(map[int]map[int]*next)
+	d := []string{south, east, north, west}
+	success := false
+	for _, v := range d {
+		i.currentDir = v
+		startMap := map[string][]int{north: {0, -1}, south: {0, 1}, east: {1, 0}, west: {-1, 0}}
+		if i.currentX == i.startX && i.currentY == i.startY {
+			if i.parimeter[i.currentY] == nil {
+				i.parimeter[i.currentY] = make(map[int]*next)
+			}
+			i.parimeter[i.currentY][i.currentX] = &next{
+				x:         i.currentX + startMap[i.currentDir][0],
+				y:         i.currentY + startMap[i.currentDir][1],
+				direction: i.currentDir,
+				pipe:      i.grid[i.currentY+startMap[i.currentDir][1]][i.currentX+startMap[i.currentDir][0]],
+			}
+			i.currentX += startMap[i.currentDir][0]
+			i.currentY += startMap[i.currentDir][1]
+		}
+		for {
+			if i.grid[i.currentY][i.currentX] == ground {
+				i.reset()
+			}
+			if m, ok := i.movement[i.grid[i.currentY][i.currentX]][i.currentDir]; ok {
+				if i.parimeter[i.currentY] == nil {
+					i.parimeter[i.currentY] = make(map[int]*next)
+				}
+				i.parimeter[i.currentY][i.currentX] = &next{
+					x:         i.currentX + m.x,
+					y:         i.currentY + m.y,
+					direction: m.exitDir,
+					pipe:      i.grid[i.currentY+m.y][i.currentX+m.x],
+				}
+				i.currentX += m.x
+				i.currentY += m.y
+				i.currentDir = m.exitDir
+			} else {
+				i.reset()
+			}
+			if i.currentX == i.startX && i.currentY == i.startY {
+				success = true
+				break
+			}
+		}
+		if success {
+			break
 		}
 	}
 }
@@ -166,13 +233,13 @@ func initIsland(input string) *island {
 
 func main() {
 	// Part 1
-	st := time.Now()
-	fmt.Println("Part 1: ", partOne(readInput()))
-	fmt.Println("Part 1 Time:", time.Since(st))
-	st = time.Now()
+	// st := time.Now()
+	// fmt.Println("Part 1: ", partOne(readInput()))
+	// fmt.Println("Part 1 Time:", time.Since(st))
+	// st = time.Now()
 	// Part 2
-	// fmt.Println("Part 2: ", partTwo(readInput()))
-	// fmt.Println("Part 2 Time:", time.Since(st))
+	fmt.Println("Part 2: ", partTwo(tempInput3))
+	//fmt.Println("Part 2 Time:", time.Since(st))
 }
 
 func partOne(input string) int {
@@ -185,6 +252,28 @@ func partOne(input string) int {
 		}
 		fmt.Println(v, ": ", err)
 	}
-	fmt.Println(island.visited, len(island.visited))
 	return int(math.Ceil(float64(len(island.visited)) / float64(2)))
+}
+
+func partTwo(input string) int {
+	island := initIsland(input)
+	island.mapParimeter()
+	// vector := west
+	// for k := range island.grid {
+	// 	for j := range island.grid[k] {
+	// 		if island.parimeter[k][j] != nil {
+	// 			for {
+
+	// 			}
+	// 		}
+	// 	}
+
+	// }
+	for _, v := range island.parimeter {
+		for _, j := range v {
+			fmt.Println(*j)
+		}
+	}
+
+	return 0
 }
