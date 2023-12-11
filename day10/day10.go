@@ -7,6 +7,7 @@ import (
 	"math"
 	"os"
 	"strings"
+	"time"
 )
 
 const tempInput = `.....
@@ -41,6 +42,17 @@ L--J.L7...LJS7F-7L7.
 .....|FJLJ|FJ|F7|.LJ
 ....FJL-7.||.||||...
 ....L---J.LJ.LJLJ...`
+
+const tempInput5 = `FF7FSF7F7F7F7F7F---7
+L|LJ||||||||||||F--J
+FL-7LJLJ||||||LJL-77
+F--JF--7||LJLJ7F7FJ-
+L---JF-JLJ.||-FJLJJ7
+|F|F-JF---7F7-L7L|7|
+|FFJF7L7F-JF7|JL---7
+7-L-JL7||F7|L7F-7F7|
+L.L7LFJ|||||FJL7||LJ
+L7JLJL-JLJLJL--JLJ.L`
 
 const filename = "input.txt"
 
@@ -127,6 +139,8 @@ func (i *island) mapParimeter() {
 	d := []string{south, east, north, west}
 	success := false
 	for _, v := range d {
+		startDir := v
+		endDir := ""
 		i.currentDir = v
 		startMap := map[string][]int{north: {0, -1}, south: {0, 1}, east: {1, 0}, west: {-1, 0}}
 		if i.currentX == i.startX && i.currentY == i.startY {
@@ -140,6 +154,7 @@ func (i *island) mapParimeter() {
 		for {
 			if i.grid[i.currentY][i.currentX] == ground {
 				i.reset()
+				break
 			}
 			if m, ok := i.movement[i.grid[i.currentY][i.currentX]][i.currentDir]; ok {
 				if i.perimeter[i.currentY] == nil {
@@ -151,16 +166,59 @@ func (i *island) mapParimeter() {
 				i.currentDir = m.exitDir
 			} else {
 				i.reset()
+				break
 			}
 			if i.currentX == i.startX && i.currentY == i.startY {
+				endDir = i.currentDir
 				success = true
 				break
 			}
 		}
 		if success {
+			i.grid[i.startY][i.startX] = findStart(startDir, endDir)
 			break
 		}
 	}
+}
+
+func findStart(s, e string) string {
+	if s == north && e == south {
+		return NSPipe
+	}
+	if s == south && e == north {
+		return NSPipe
+	}
+	if s == east && e == west {
+		return EWPipe
+	}
+	if s == west && e == east {
+		return EWPipe
+	}
+	if s == north && e == east {
+		return NWBend
+	}
+	if s == east && e == north {
+		return SEBend
+	}
+	if s == north && e == west {
+		return NEBend
+	}
+	if s == west && e == north {
+		return SWBend
+	}
+	if s == south && e == west {
+		return SEBend
+	}
+	if s == west && e == south {
+		return NWBend
+	}
+	if s == south && e == east {
+		return SWBend
+	}
+	if s == east && e == south {
+		return NEBend
+	}
+	return ""
 }
 
 // x and y start at the upper left corner
@@ -228,13 +286,13 @@ func initIsland(input string) *island {
 
 func main() {
 	// Part 1
-	// st := time.Now()
-	// fmt.Println("Part 1: ", partOne(readInput()))
-	// fmt.Println("Part 1 Time:", time.Since(st))
-	// st = time.Now()
+	st := time.Now()
+	fmt.Println("Part 1: ", partOne(readInput()))
+	fmt.Println("Part 1 Time:", time.Since(st))
+	st = time.Now()
 	// Part 2
-	fmt.Println("Part 2: ", partTwo(tempInput4))
-	//fmt.Println("Part 2 Time:", time.Since(st))
+	fmt.Println("Part 2: ", partTwo(readInput()))
+	fmt.Println("Part 2 Time:", time.Since(st))
 }
 
 func partOne(input string) int {
@@ -251,31 +309,57 @@ func partOne(input string) int {
 }
 
 func partTwo(input string) int {
-
-	score := map[string]float64{NSPipe: 1, EWPipe: 0, NEBend: 0.5, NWBend: 0.5, SWBend: 0.5, SEBend: 0.5, start: 1}
-
 	island := initIsland(input)
 	island.mapParimeter()
 	inside := 0
 	//vector := east
 	for k := range island.grid {
 		for j := range island.grid[k] {
-			if island.grid[k][j] == ground {
+			if !island.perimeter[k][j] {
 				var countA float64
 				for i := j; i >= 0; i-- {
 					if island.perimeter[k][i] {
-						countA += score[island.grid[k][i]]
+						if island.grid[k][i] == SWBend {
+							for l := i; l >= 0; l-- {
+								if island.perimeter[k][l] {
+									if island.grid[k][l] == NEBend {
+										countA++
+										i = l
+										break
+									}
+									if island.perimeter[k][l] && island.grid[k][l] == SEBend {
+										i = l
+										break
+									}
+								}
+							}
+						}
+						if island.grid[k][i] == NWBend {
+							for l := i; l >= 0; l-- {
+								if island.perimeter[k][l] {
+									if island.grid[k][l] == SEBend {
+										countA++
+										i = l
+										break
+									}
+									if island.perimeter[k][l] && island.grid[k][l] == NEBend {
+										i = l
+										break
+									}
+								}
+							}
+						}
+						if island.grid[k][i] == NSPipe {
+							countA++
+						}
 					}
 				}
 				if int(math.Floor(countA))%2 != 0 {
 					inside++
-				} else {
-					fmt.Println("x: ", j, " y: ", k, " countX: ", countA, " inside: ", inside)
 				}
 			}
 		}
 
 	}
-	fmt.Println("inside: ", inside)
-	return 0
+	return inside
 }
