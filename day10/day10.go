@@ -62,6 +62,16 @@ const (
 	south = "S"
 	east  = "E"
 	west  = "W"
+
+	// vectors
+	vNorth = 0
+	vSouth = 180
+	vEast  = 90
+	vWest  = 270
+
+	// pivots
+	pivotCW = 90
+	pivotCC = -90
 )
 
 type movementMap map[string]map[string]movement
@@ -256,24 +266,55 @@ func partOne(input string) int {
 }
 
 func partTwo(input string) int {
+
 	island := initIsland(input)
 	island.mapParimeter()
-	// vector := west
-	// for k := range island.grid {
-	// 	for j := range island.grid[k] {
-	// 		if island.parimeter[k][j] != nil {
-	// 			for {
+	outside := make(map[int]map[int]bool)
+	//vector := east
+	for k := range island.grid {
+		for j := range island.grid[k] {
+			if island.parimeter[k][j] != nil {
+				// fmt.Println(island.grid[k][j], island.parimeter[k][j].pipe, island.parimeter[k][j].direction)
+				// for {
 
-	// 			}
-	// 		}
-	// 	}
-
-	// }
-	for _, v := range island.parimeter {
-		for _, j := range v {
-			fmt.Println(*j)
+				// }
+			} else {
+				if outside[k] == nil {
+					outside[k] = make(map[int]bool)
+				}
+				outside[k][j] = true
+			}
 		}
+
 	}
+	// for _, v := range island.parimeter {
+	// 	for _, j := range v {
+	// 		fmt.Println(*j)
+	// 	}
+	// }
 
 	return 0
 }
+
+func vectorChange(pipe string, vector int) int {
+	switch {
+	case pipe == NSPipe:
+		return vector
+	case pipe == EWPipe:
+		return vector
+	case pipe == NEBend && vector == vSouth:
+		return vector + pivotCC
+	case pipe == NEBend && vector == vWest:
+		return vector + pivotCW
+
+	}
+}
+
+// NSPipe = "|"
+// EWPipe = "-"
+// NEBend = "L"
+// NWBend = "J"
+// SWBend = "7"
+// SEBemd = "F"
+// ground = "."
+// start  = "S"
