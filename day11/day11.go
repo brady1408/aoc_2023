@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math"
+	"os"
 	"strings"
 	"time"
 )
@@ -18,25 +20,54 @@ const tempInput = `...#......
 .......#..
 #...#.....`
 
+const filename = "input.txt"
+
+type coords struct {
+	row, col int
+}
+
+type universe struct {
+	layout                        [][]string
+	expandedRows, expandedColumns []int
+	galaxies                      []coords
+	expansion                     int
+}
+
+func readInput() string {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(data)
+}
+
 func main() {
 	// Part 1
 	st := time.Now()
-	fmt.Println("Part 1: ", partOne(tempInput))
+	fmt.Println("Part 1: ", partOne(readInput(), 2))
 	fmt.Println("Part 1 Time:", time.Since(st))
 	st = time.Now()
 	// Part 2
-	// fmt.Println("Part 2: ", partTwo(readInput()))
-	// fmt.Println("Part 2 Time:", time.Since(st))
+	fmt.Println("Part 2: ", partTwo(readInput(), 1000000))
+	fmt.Println("Part 2 Time:", time.Since(st))
 }
 
-func partOne(input string) int {
-	matrix := parseInput(input)
-	galaxies := findGalaxies(matrix)
-	fmt.Println(galaxies)
-	return 0
+func partTwo(input string, galaxyExpansionRate int) int {
+	return partOne(input, galaxyExpansionRate)
 }
 
-func parseInput(input string) [][]string {
+func partOne(input string, galaxyExpansionRate int) int {
+	universe := parseInput(input, galaxyExpansionRate)
+	universe.findGalaxies(universe.layout)
+	distances := universe.mapDistances()
+	sum := 0
+	for _, distance := range distances {
+		sum += distance
+	}
+	return sum
+}
+
+func parseInput(input string, galaxyExpansionRate int) universe {
 	matrix := make([][]string, 0)
 	emptyRows := make([]int, 0)
 	emptyColumns := make([]int, 0)
@@ -65,61 +96,49 @@ func parseInput(input string) [][]string {
 			emptyColumns = append(emptyColumns, i)
 		}
 	}
-	expandedMatrix := expandMatrix(matrix, emptyRows, emptyColumns)
-	return expandedMatrix
+	return universe{matrix, emptyRows, emptyColumns, []coords{}, galaxyExpansionRate - 1}
 }
 
-func expandMatrix(matrix [][]string, expandRow, expandColumn []int) [][]string {
-	newMatrix := make([][]string, 0)
-	for k, row := range matrix {
-		newRow := make([]string, 0)
-		for k, char := range row {
-			newRow = append(newRow, char)
-			for _, extra := range expandColumn {
-				if k == extra {
-					newRow = append(newRow, char)
-				}
-			}
-		}
-		newMatrix = append(newMatrix, newRow)
-		for _, extra := range expandRow {
-			if k == extra {
-				newMatrix = append(newMatrix, newRow)
-			}
-		}
-	}
-	return newMatrix
-}
-
-type coords struct {
-	row, col int
-}
-
-func findGalaxies(matrix [][]string) []coords {
+func (u *universe) findGalaxies(matrix [][]string) {
 	galaxies := make([]coords, 0)
 	for k, row := range matrix {
 		for l, char := range row {
 			if char == "#" {
-				galaxies = append(galaxies, coords{k, l})
+				galaxies = append(galaxies, u.expandCoords(coords{k, l}))
 			}
 		}
 	}
-	return galaxies
+	u.galaxies = galaxies
 }
 
-func mapDistances(galaxies []coords) map[coords]map[coords]int {
-	distances := make(map[coords]map[coords]int)
-	for k, galaxy := range galaxies {
-		distances[galaxy] = make(map[coords]int)
-		for l, otherGalaxy := range galaxies {
-			if k != l {
-				distances[galaxy][otherGalaxy] = distance(galaxy, otherGalaxy)
+func (u universe) expandCoords(c coords) coords {
+	newRow, newCol := c.row, c.col
+	for _, e := range u.expandedRows {
+		if c.row >= e {
+			newRow += u.expansion
+		}
+	}
+	for _, e := range u.expandedColumns {
+		if c.col >= e {
+			newCol += u.expansion
+		}
+	}
+	return coords{newRow, newCol}
+}
+
+func (u universe) mapDistances() []int {
+	distances := []int{}
+	for k, galaxy := range u.galaxies {
+		for l, otherGalaxy := range u.galaxies {
+			if l <= k {
+				continue
 			}
+			distances = append(distances, u.distance(galaxy, otherGalaxy))
 		}
 	}
 	return distances
 }
 
-func distance(a, b coords) int {
-	return int(math.Abs(float64(a.row-b.row)) + math.Abs(float64(a.col-b.col)))
+func (u universe) distance(galaxy, otherGalaxy coords) int {
+	return int(math.Abs(float64(galaxy.row-otherGalaxy.row)) + math.Abs(float64(galaxy.col-otherGalaxy.col)))
 }
